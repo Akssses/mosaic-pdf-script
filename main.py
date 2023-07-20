@@ -49,8 +49,23 @@ def split_block_into_tiles(block, tiles_per_row, tiles_per_column):
             tiles.append(tile)
     return tiles
 
+palette_hex = ['#f5e9d5', '#514c53', '#ddddda', '#c5c6be', '#000000']
+palette_rgb = [hex_to_rgb(color) for color in palette_hex]
+
+color_to_letter = {
+    palette_rgb[0]: 'M',
+    palette_rgb[1]: 'P',
+    palette_rgb[2]: 'G',
+    palette_rgb[3]: 'S',
+    palette_rgb[4]: 'B',
+}
+
 def colorize_tiles(tiles, palette):
-    return [closest_color(np.array(tile).mean(axis=(0, 1)).astype(int), palette) for tile in tiles]
+    colors = [closest_color(np.array(tile).mean(axis=(0, 1)).astype(int), palette) for tile in tiles]
+    # convert colors to letters
+    return [color_to_letter[color] for color in colors]
+
+letter_to_color = {v: k for k, v in color_to_letter.items()} 
 
 def blocks_to_pdf(blocks, filename, blocks_per_page, logo_path, logo_width, logo_height, logo_x, logo_y):
     pdf = PDF(orientation='P', unit='mm', format='A4')
@@ -93,12 +108,28 @@ def blocks_to_pdf(blocks, filename, blocks_per_page, logo_path, logo_width, logo
             # Move the entire block down
             group_y += y_offset
 
-            # Draw colored tiles
-            for t, color in enumerate(block):
+            # Draw colored tiles first
+            for t, letter in enumerate(block):
                 x = group_x + 20 + (t % 9) * (tile_size + tile_spacing)
                 y = group_y + 10 + (t // 9) * (tile_size + tile_spacing)
+                color = letter_to_color[letter]   # Fix here, map letter back to color
+                
+                # Draw the tile
                 pdf.set_fill_color(*color)
                 pdf.rounded_rect(x, y, tile_size, tile_size, 0.5, 'F')  # 2mm rounded corners
+
+            # Draw letters on the tiles
+            for t, letter in enumerate(block):
+                x = group_x + 18.5 + (t % 9) * (tile_size + tile_spacing)
+                y = group_y + 6 + (t // 9) * (tile_size + tile_spacing)
+
+                # Draw the letter on the tile
+                pdf.set_font("Arial", style='B', size=font_size)
+                pdf.set_text_color(129, 129, 129)  # black color
+                pdf.set_xy(x + tile_size / 2 - pdf.get_string_width(letter) / 2, y + tile_size / 2 + font_size / 2)
+                pdf.cell(0, 0, letter, ln=False)
+
+
 
             # Draw tile numbers (top side)
             pdf.set_font("Arial", style='B', size=font_size)
@@ -158,14 +189,13 @@ def blocks_to_pdf(blocks, filename, blocks_per_page, logo_path, logo_width, logo
     pdf.output(filename)
 
 
-image_path = 'men.png'
+image_path = 'photo.png'
 logo_path = 'self-pixel.png'
 logo_width = 50
 logo_height = 20
 logo_x = 10
 logo_y = 5
-palette_hex = ['#f5e9d5', '#ddddda', '#c5c6be', '#514c53', '#3a3837', '#000000']
-palette_rgb = [hex_to_rgb(color) for color in palette_hex]
+
 image = Image.open(image_path).convert('RGB')
 blocks = split_image_into_blocks(image, 13, 11)
 tiles = [split_block_into_tiles(block, 9, 15) for block in blocks]
