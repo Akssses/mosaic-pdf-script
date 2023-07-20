@@ -152,8 +152,8 @@ def blocks_to_pdf(blocks, filename, blocks_per_page, logo_path, logo_width, logo
                 x = group_x + 19.5 + (t % 9) * (tile_size + tile_spacing)
                 y = group_y + 7 + (t // 9) * (tile_size + tile_spacing)
 
-                # Сбрасываем счетчик, когда цвет плитки меняется
-                if previous_tile != letter:
+                # Сбрасываем счетчик, когда цвет плитки меняется или когда начинается новый ряд
+                if previous_tile != letter or (t % 9 == 0 and t != 0):
                     counter = 1
                 previous_tile = letter
 
@@ -165,6 +165,7 @@ def blocks_to_pdf(blocks, filename, blocks_per_page, logo_path, logo_width, logo
 
                 # Увеличиваем счетчик
                 counter += 1
+
 
             # Рисуем буквы на плитках
             for t, letter in enumerate(block):
