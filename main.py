@@ -65,7 +65,7 @@ def colorize_tiles(tiles, palette):
     # convert colors to letters
     return [color_to_letter[color] for color in colors]
 
-letter_to_color = {v: k for k, v in color_to_letter.items()} 
+letter_to_color = {v: k for k, v in color_to_letter.items()}
 
 def count_consecutive_same_elements(lst):
     result = []
@@ -88,39 +88,44 @@ def count_consecutive_same_elements(lst):
 
     return result
 
+def add_original_image_page(pdf, image_path):
+    pdf.add_page()
+    pdf.image(image_path, x=10, y=10, w=190)
 
-def blocks_to_pdf(blocks, filename, blocks_per_page, logo_path, logo_width, logo_height, logo_x, logo_y):
-    # Создаем экземпляр класса PDF
+
+def blocks_to_pdf(blocks, filename, blocks_per_page, logo_path, logo_width, logo_height, logo_x, logo_y, image_path):
     pdf = PDF(orientation='P', unit='mm', format='A4')
-    # Определяем размеры и расположение элементов на странице
     blocks_per_row = 3
     blocks_per_column = blocks_per_page // blocks_per_row
     pages = (len(blocks) - 1) // blocks_per_page + 1
 
     group_width = group_height = min((pdf.w - 30) / blocks_per_row, (pdf.h - 30) / blocks_per_column)
-    spacing = 15 
+    spacing = 15
 
-    tile_size = (group_height - 20) / max(9, 15)  # Предполагая 9 плиток в строке и 15 в столбце в блоке
-    tile_spacing = 0.5  # Промежуток между плитками
+    tile_size = (group_height - 20) / max(9, 15)  # Assuming 9 tiles per row and 15 per column in a block
+    tile_spacing = 0.5  # spacing between tiles
 
-    font_size = 4  # Регулируйте размер шрифта по мере необходимости
+    font_size = 4  # Adjust the font size as needed
 
-    # Определяем смещение по оси Y для перемещения всего блока вниз
+    # Define the y offset to move the entire section down
     y_offset = 20
+
+    # Add the original image page
+    add_original_image_page(pdf, image_path)
 
     for p in range(pages):
         pdf.add_page()
 
-        # Перемещаем блок вниз
+        # Move the entire section down
         pdf.set_y(pdf.get_y() + y_offset)
 
-        # Добавляем диапазон блоков в верхнем правом углу
+        # Add the block range in the top right corner
         block_range = f"{blocks_per_page * p + 1}-{min(blocks_per_page * (p + 1), len(blocks))}"
         pdf.set_font("Arial", style='B', size=35)
-        pdf.set_text_color(0, 0, 0)  # черный цвет
+        pdf.set_text_color(0, 0, 0)  # black color
         pdf.cell(0, -30, txt=block_range, align="R", ln=True)
 
-        # Добавляем логотип
+        # Add the logo
         pdf.image(logo_path, x=logo_x, y=logo_y, w=logo_width, h=logo_height)
 
         for i in range(blocks_per_page * p, min(blocks_per_page * (p + 1), len(blocks))):
@@ -235,7 +240,8 @@ def blocks_to_pdf(blocks, filename, blocks_per_page, logo_path, logo_width, logo
 
     pdf.output(filename)
 
-image_path = 'men.png'
+
+image_path = 'classic.png'
 logo_path = 'self-pixel.png'
 logo_width = 50
 logo_height = 20
@@ -246,4 +252,4 @@ image = Image.open(image_path).convert('RGB')
 blocks = split_image_into_blocks(image, 13, 11)
 tiles = [split_block_into_tiles(block, 9, 15) for block in blocks]
 colorized_blocks = [colorize_tiles(block_tiles, palette_rgb) for block_tiles in tiles]
-blocks_to_pdf(colorized_blocks, 'blocks.pdf', 12, logo_path, logo_width, logo_height, logo_x, logo_y)
+blocks_to_pdf(colorized_blocks, 'blocks.pdf', 12, logo_path, logo_width, logo_height, logo_x, logo_y, image_path)
