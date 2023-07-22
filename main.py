@@ -2,6 +2,7 @@ from PIL import Image
 from fpdf import FPDF
 import numpy as np
 from math import sqrt
+import json
 
 class PDF(FPDF):
     def rounded_rect(self, x, y, w, h, r, style = ''):
@@ -89,8 +90,32 @@ def count_consecutive_same_elements(lst):
     return result
 
 def add_original_image_page(pdf, image_path):
+    try:
+        img = Image.open(image_path)
+        img.verify()
+    except (IOError, SyntaxError) as e:
+        print(f'Invalid image file: {e}')
+        return
+
     pdf.add_page()
-    pdf.image(image_path, x=10, y=10, w=190)
+    pdf.image(image_path, x=40, y=40, w=125, h=200)
+    
+
+def create_tiles_data(blocks):
+    tiles_data = []
+    for block in blocks:
+        block_data = []
+        for t, letter in enumerate(block):
+            tile_data = {"color": list(letter_to_color[letter]), "number": t + 1, "letter": letter}
+            block_data.append(tile_data)
+
+        tiles_data.append(block_data)
+
+    return tiles_data
+
+def save_tiles_to_json(data, filename):
+    with open(filename, 'w') as file:
+        json.dump(data, file)
 
 
 def blocks_to_pdf(blocks, filename, blocks_per_page, logo_path, logo_width, logo_height, logo_x, logo_y, image_path):
@@ -112,6 +137,9 @@ def blocks_to_pdf(blocks, filename, blocks_per_page, logo_path, logo_width, logo
 
     # Add the original image page
     add_original_image_page(pdf, image_path)
+
+    tiles_data = create_tiles_data(blocks)
+    save_tiles_to_json(tiles_data, 'tiles.json')
 
     for p in range(pages):
         pdf.add_page()
@@ -244,7 +272,7 @@ def blocks_to_pdf(blocks, filename, blocks_per_page, logo_path, logo_width, logo
 image_path = 'classic.png'
 logo_path = 'self-pixel.png'
 logo_width = 50
-logo_height = 20
+logo_height = 25
 logo_x = 10
 logo_y = 5
 
