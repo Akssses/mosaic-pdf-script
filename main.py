@@ -89,7 +89,7 @@ def count_consecutive_same_elements(lst):
 
     return result
 
-def add_original_image_page(pdf, image_path):
+def add_original_image_page(pdf, image_path, logo_path, logo_x, logo_y, logo_width, logo_height):
     try:
         img = Image.open(image_path)
         img.verify()
@@ -100,13 +100,17 @@ def add_original_image_page(pdf, image_path):
     pdf.add_page()
     pdf.image(image_path, x=40, y=40, w=125, h=200)
     
+    # Add the logo
+    pdf.image(logo_path, x=logo_x, y=logo_y, w=logo_width, h=logo_height)
+
+    
 
 def create_tiles_data(blocks):
     tiles_data = []
     for block in blocks:
         block_data = []
         for t, letter in enumerate(block):
-            tile_data = {"color": list(letter_to_color[letter]), "number": t + 1, "letter": letter}
+            tile_data = {"color": list(letter_to_color[letter]), "number": t, "letter": letter}
             block_data.append(tile_data)
 
         tiles_data.append(block_data)
@@ -116,6 +120,7 @@ def create_tiles_data(blocks):
 def save_tiles_to_json(data, filename):
     with open(filename, 'w') as file:
         json.dump(data, file)
+        
 
 
 def blocks_to_pdf(blocks, filename, blocks_per_page, logo_path, logo_width, logo_height, logo_x, logo_y, image_path):
@@ -123,6 +128,8 @@ def blocks_to_pdf(blocks, filename, blocks_per_page, logo_path, logo_width, logo
     blocks_per_row = 3
     blocks_per_column = blocks_per_page // blocks_per_row
     pages = (len(blocks) - 1) // blocks_per_page + 1
+
+    add_original_image_page(pdf, image_path, logo_path, logo_x, logo_y, logo_width, logo_height) 
 
     group_width = group_height = min((pdf.w - 30) / blocks_per_row, (pdf.h - 30) / blocks_per_column)
     spacing = 15
@@ -136,7 +143,8 @@ def blocks_to_pdf(blocks, filename, blocks_per_page, logo_path, logo_width, logo
     y_offset = 20
 
     # Add the original image page
-    add_original_image_page(pdf, image_path)
+    # add_original_image_page(pdf, image_path, 'self-pixel.png', 10, 10, 50, 50)
+
 
     tiles_data = create_tiles_data(blocks)
     save_tiles_to_json(tiles_data, 'tiles.json')
@@ -155,6 +163,8 @@ def blocks_to_pdf(blocks, filename, blocks_per_page, logo_path, logo_width, logo
 
         # Add the logo
         pdf.image(logo_path, x=logo_x, y=logo_y, w=logo_width, h=logo_height)
+
+        
 
         for i in range(blocks_per_page * p, min(blocks_per_page * (p + 1), len(blocks))):
             block = blocks[i]

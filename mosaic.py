@@ -2,8 +2,6 @@ from PIL import Image, ImageDraw, ImageFilter
 import numpy as np
 import math
 
-# Вспомогательные функции для создания мозаики
-
 def hex_to_rgb(hex_color):
     return tuple(int(hex_color[i:i + 2], 16) for i in (1, 3, 5))  # skipping '#' character in hex color
 
